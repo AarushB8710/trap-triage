@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Camera-Trap Triage Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Nunito', -apple-system, sans-serif;
+    background: radial-gradient(circle at 20% 20%, #1a3a2e 0%, #0d2818 45%, #071912 100%);
+    color: #eafff2;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .bg-critter {
+    position: absolute;
+    font-size: 42px;
+    opacity: 0.12;
+    animation: float 8s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-18px) rotate(6deg); }
+  }
+  .box {
+    background: linear-gradient(160deg, #16351f 0%, #0f2417 100%);
+    border: 2px solid #2d6a4f;
+    border-radius: 24px;
+    padding: 48px;
+    width: 500px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    position: relative;
+    z-index: 1;
+  }
+  h1 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 28px;
+    margin: 0 0 8px;
+    background: linear-gradient(90deg, #95d5b2, #ffd166, #f4a261);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  p.tagline { color: #b7e4c7; font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+  .dropzone {
+    border: 3px dashed #40916c;
+    border-radius: 16px;
+    padding: 36px 20px;
+    margin-bottom: 22px;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: rgba(64, 145, 108, 0.08);
+    display: block;
+  }
+  .dropzone:hover { border-color: #ffd166; background: rgba(255, 209, 102, 0.08); transform: scale(1.01); }
+  .dropzone.dragover { border-color: #ffd166; background: rgba(255, 209, 102, 0.15); }
+  .paw { font-size: 34px; margin-bottom: 6px; display: block; }
+  input[type=file] { display: none; }
+  .filename { font-size: 13px; color: #d8f3dc; margin-top: 8px; font-weight: 700; }
+  .hint { font-size: 12px; color: #74c69d; margin-top: 4px; }
+  button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #52b788, #2d6a4f);
+    color: #fff;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: not-allowed;
+    opacity: 0.45;
+    transition: all 0.25s;
+    letter-spacing: 0.3px;
+  }
+  button.ready {
+    cursor: pointer;
+    opacity: 1;
+    background: linear-gradient(90deg, #ffb703, #fb8500);
+    box-shadow: 0 8px 20px rgba(251, 133, 0, 0.35);
+  }
+  button.ready:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(251, 133, 0, 0.45); }
+  .btn-state-hint { font-size: 11px; color: #74c69d; margin-top: 10px; min-height: 14px; }
+  .loading { display: none; margin-top: 18px; font-size: 13px; color: #ffd166; font-weight: 700; }
+  .loading.active { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 3px solid rgba(255,209,102,0.3);
+    border-top-color: #ffd166;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <span class="bg-critter" style="top:8%; left:8%;">🦊</span>
+  <span class="bg-critter" style="top:15%; right:10%; animation-delay: 2s;">🦉</span>
+  <span class="bg-critter" style="bottom:12%; left:12%; animation-delay: 4s;">🐾</span>
+  <span class="bg-critter" style="bottom:18%; right:8%; animation-delay: 1s;">🦌</span>
+  <span class="bg-critter" style="top:45%; left:4%; animation-delay: 3s; font-size:28px;">🍃</span>
+  <span class="bg-critter" style="top:50%; right:4%; animation-delay: 5s; font-size:28px;">🍃</span>
+
+  <div class="box">
+    <h1>🦉 Camera-Trap Triage Platform</h1>
+    <p class="tagline">Upload a batch of camera-trap photos — MegaDetector spots the wildlife, filters out the blanks, and flags anything unsure for you to double-check.</p>
+    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+      <label class="dropzone" id="dropzone" for="fileInput">
+        <span class="paw">🐾</span>
+        <div id="dzText">Click to choose a .zip file<br>or drag it here</div>
+      </label>
+      <input type="file" id="fileInput" name="zipfile" accept=".zip">
+      <button type="submit" id="submitBtn" disabled>🔍 Run Detection</button>
+      <div class="btn-state-hint" id="btnHint">Choose a .zip file above to enable this button</div>
+      <div class="loading" id="loadingMsg"><span class="spinner"></span> Scanning your batch for wildlife...</div>
+    </form>
+  </div>
+  <script>
+    const dz = document.getElementById('dropzone');
+    const input = document.getElementById('fileInput');
+    const dzText = document.getElementById('dzText');
+    const btn = document.getElementById('submitBtn');
+    const btnHint = document.getElementById('btnHint');
+    const form = document.getElementById('uploadForm');
+    const loading = document.getElementById('loadingMsg');
+
+    function enableButton(name) {
+      dzText.textContent = "✅ " + name;
+      btn.disabled = false;
+      btn.classList.add('ready');
+      btnHint.textContent = "Ready! Click below to run detection.";
+    }
+    input.addEventListener('change', () => {
+      if (input.files.length) enableButton(input.files[0].name);
+    });
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.classList.remove('dragover');
+      input.files = e.dataTransfer.files;
+      if (input.files.length) enableButton(input.files[0].name);
+    });
+    form.addEventListener('submit', () => {
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+      loading.classList.add('active');
+    });
+  </script>
+</body>
+</html>
