@@ -1,0 +1,17 @@
+# Model weights - too large for git, download separately (see README)
+*.pt
+*.pth
+*.ckpt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Uploaded/generated data
+uploads/
+
+# OS junk
+.DS_Store
+__MACOSX/
